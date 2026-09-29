@@ -1,0 +1,51 @@
+# CI pipeline (D15). CI-neutral design: an Azure DevOps equivalent lives in infra/pipelines/ (DR-47).
+name: ci
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: app_migrator, POSTGRES_PASSWORD: app_migrator_dev, POSTGRES_DB: bml_people_er }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U app_migrator" --health-interval 5s --health-retries 10
+    env:
+      PLATFORM_ENV: dev
+      MOCK_IDP_ENABLED: "true"
+      DATABASE_URL_MIGRATOR: postgres://app_migrator:app_migrator_dev@localhost:5432/bml_people_er
+      DATABASE_URL: postgres://app_runtime:app_runtime_dev@localhost:5432/bml_people_er
+      APP_RUNTIME_PASSWORD: app_runtime_dev
+      DEV_JWT_SECRET: ci-only-secret-please-change-0123456789
+      FIELD_ENCRYPTION_KEY: fSrEhJvVcTGnzPZAoU/0RdNdXeEwnnLnjxvEqtg+/eg=
+      API_BASE_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: PII / secret scan
+        run: pnpm scan:pii
+      - name: Build (packages → api, worker, web)
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Dependency audit
+        run: pnpm audit --audit-level high || true   # report-only until triage owner is named
+      - name: Migrate + seed (synthetic)
+        run: pnpm db:migrate && pnpm db:seed
+      - name: Start api, worker, web
+        run: |
+          node apps/api/dist/main.js > api.log 2>&1 &
+          node apps/worker/dist/main.js > worker.log 2>&1 &
+          (cd apps/web && pnpm start > ../../web.log 2>&1 &)
+          npx wait-on -t 60000 http://localhost:4000/ready http://localhost:3000/sign-in
+      - name: Security & permission suite
+        run: pnpm test:security
+      - name: E2E (Playwright)
+        run: npx playwright install --with-deps chromium && pnpm test:e2e
+      - if: failure()
+        run: tail -n 100 api.log worker.log web.log

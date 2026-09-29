@@ -1,0 +1,4 @@
+metric_code,family,name,definition,numerator,denominator,exclusions,grain,dimensions,unit,direction,benchmark,threshold_amber,threshold_red,min_n_suppression,owner,effective_from
+HEADCOUNT,Workforce,,,,,,month,division|department|unit,count,,,,,,,
+ABSENCE_RATE,Attendance,,,,,,month,division|department|unit,%,lower-better,,,,,,
+OT_HOURS_PER_EMP,Overtime,,,,,,month,division|department,hours,,,,,,,

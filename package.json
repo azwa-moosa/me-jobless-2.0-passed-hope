@@ -1,0 +1,33 @@
+{
+  "name": "bml-people-er-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BML People & ER Platform – Sprint 1 foundation + first slice (Action Centre My Work, ER MVP intake). SYNTHETIC DATA ONLY in DEV.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:packages": "pnpm --filter \"./packages/**\" run build",
+    "build": "pnpm build:packages && pnpm --filter @bml/api --filter @bml/worker --filter @bml/web run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "infra:up": "docker compose -f infra/docker/compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker/compose.yml down",
+    "db:migrate": "pnpm --filter @bml/schemas run migrate",
+    "db:seed": "pnpm --filter @bml/schemas run seed",
+    "db:reset": "pnpm --filter @bml/schemas run reset",
+    "dev": "pnpm build:packages && pnpm --parallel --filter @bml/api --filter @bml/worker --filter @bml/web run dev",
+    "test:security": "node tests/security/run-matrix.mjs",
+    "scan:pii": "node tests/security/pii-scan.mjs",
+    "test:e2e": "playwright test",
+    "test:all": "pnpm test && pnpm scan:pii && pnpm test:security && pnpm test:e2e",
+    "db:dictionary": "pnpm --filter @bml/schemas run dictionary"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
+    "yaml": "^2.6.0"
+  }
+}

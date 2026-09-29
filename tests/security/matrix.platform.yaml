@@ -1,0 +1,36 @@
+# Permission matrix → generated API tests (D7). Draft per F-access-matrix.md; changes need HR/ER/IS sign-off (DR-07).
+# expect: HTTP status. Placeholders: {c1} case on er.officer's team, {c2} case only on er.manager's team,
+# {inScope} employee in DIV01, {outScope} employee in DIV02.
+personas:
+  hra: analytics.admin@dev.synthetic.local
+  ero: er.officer@dev.synthetic.local
+  ero2: er.officer2@dev.synthetic.local
+  erm: er.manager@dev.synthetic.local
+  eng: engagement.hr@dev.synthetic.local
+  lead: hr.leadership@dev.synthetic.local
+  dh: division.head@dev.synthetic.local
+  dhx: division.head.expired@dev.synthetic.local
+  mgr: manager@dev.synthetic.local
+  emp: employee@dev.synthetic.local
+  doc: document.hr@dev.synthetic.local
+  adm: platform.admin@dev.synthetic.local
+  aud: audit.reviewer@dev.synthetic.local
+
+cases:
+  - { name: "/me for every persona", get: /me, expect: { hra: 200, ero: 200, erm: 200, dh: 200, dhx: 200, mgr: 200, emp: 200, adm: 200, aud: 200 } }
+  - { name: "employee search", get: "/employees?q=ai", expect: { hra: 200, ero: 200, dh: 200, doc: 200, eng: 200, lead: 403, mgr: 403, emp: 403, adm: 403, aud: 403, dhx: 403 } }
+  - { name: "employee in scope", get: "/employees/{inScope}", expect: { hra: 200, dh: 200, doc: 200, mgr: 403, adm: 403 } }
+  - { name: "employee out of scope (cross-division)", get: "/employees/{outScope}", expect: { hra: 200, dh: 403, doc: 200 } }
+  - { name: "position history", get: "/employees/{inScope}/positions", expect: { hra: 200, ero: 200, doc: 200, dh: 403, adm: 403 } }
+  - { name: "org tree", get: "/org-units/tree", expect: { hra: 200, adm: 200, emp: 403, aud: 403 } }
+  - { name: "ER dashboard", get: /er/dashboard, expect: { ero: 200, erm: 200, hra: 403, lead: 403, mgr: 403, emp: 403, adm: 403, aud: 403 } }
+  - { name: "ER case list", get: /er/cases, expect: { ero: 200, erm: 200, dh: 403, mgr: 403, adm: 403 } }
+  - { name: "ER case on team (direct URL)", get: "/er/cases/{c1}", expect: { ero: 200, erm: 200, ero2: 403, mgr: 403, emp: 403, adm: 403, hra: 403 } }
+  - { name: "ER case NOT on team (direct URL)", get: "/er/cases/{c2}", expect: { ero: 403, ero2: 403, erm: 200 } }
+  - { name: "ER timeline", get: "/er/cases/{c1}/timeline", expect: { ero: 200, ero2: 403, mgr: 403 } }
+  - { name: "ER access log", get: "/er/cases/{c1}/access-log", expect: { erm: 200, ero: 403 } }
+  - { name: "audit events", get: /audit/events, expect: { aud: 200, erm: 200, adm: 200, ero: 403, emp: 403 } }
+  - { name: "audit verify", get: /audit/verify, expect: { aud: 200, adm: 403, erm: 403 } }
+  - { name: "feature flags", get: /admin/feature-flags, expect: { adm: 200, hra: 403, aud: 403 } }
+  - { name: "action views", get: "/actions?view=my", expect: { emp: 200, mgr: 200, ero: 200, aud: 403, dhx: 403 } }
+  - { name: "team view needs actions.team.read", get: "/actions?view=team", expect: { ero: 200, emp: 403 } }

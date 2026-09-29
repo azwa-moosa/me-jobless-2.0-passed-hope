@@ -1,0 +1,4 @@
+case_type,status_code,status_label,allowed_next_statuses,permission_required,reason_required,mandatory_steps_before_exit,sla_business_days,escalate_to,reference_format
+DISCIPLINARY,,,,,,,,,
+GRIEVANCE,,,,,,,,,
+INVESTIGATION,,,,,,,,,

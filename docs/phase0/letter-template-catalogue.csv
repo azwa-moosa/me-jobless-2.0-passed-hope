@@ -1,0 +1,8 @@
+letter_type,purpose,required_fields,restricted_fields,locked_sections,narrative_slots_ai_allowed,signatory_role,approver_role,reference_format,output_format,language
+VISA_LETTER,,name|passport|doj|position|org|destination|travel_dates,passport|salary,,,,,,DOCX+PDF,
+ACADEMIC_EXCUSE,,name|nid|position|institution|missed_period,nid,,,,,,DOCX+PDF,
+ACADEMIC_REFERENCE,,name|nid|doj|current_role|org|institution,nid,,,,,,DOCX+PDF,
+RELEASE_STAFF_REFERENCE,,doj|dor|final_role|department|jd,,,,,,,DOCX+PDF,
+GENERAL_EMPLOYMENT_RECORD,,doj|dor|service_period|positions|org,,,,,,,DOCX+PDF,
+JOB_OPPORTUNITY_REFERENCE,,employment|role_history|jd_summary|purpose,,,,,,,DOCX+PDF,
+FINANCIAL_REFERENCE,,doj|service|role|employment_type|salary|recipient,salary,,,,,,DOCX+PDF,

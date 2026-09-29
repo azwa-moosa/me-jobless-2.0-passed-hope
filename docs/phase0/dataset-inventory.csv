@@ -1,0 +1,9 @@
+dataset_code,dataset_name,source_system,owner,frequency,grain,file_format,key_column,contains_restricted_fields,sample_file_available,notes
+STAFF_MASTER,Employee / Staff Master,,,,employee snapshot,,UID,,,
+ATTENDANCE,Attendance / leave,,,,employee-period,,UID,,,
+RECRUITMENT,Recruitment,,,,event,,,,,
+MOVEMENT,Transfers & promotions,,,,event,,UID,,,
+TURNOVER,Separations,,,,separation event,,UID,,,
+OVERTIME,Overtime,,,,employee-period,,UID,,,
+RECOGNITION,Recognition,,,,award event,,,,,
+TRAINING,Training,,,,attendance/event,,UID,,,

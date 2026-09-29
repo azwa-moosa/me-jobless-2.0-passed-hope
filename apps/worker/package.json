@@ -1,0 +1,14 @@
+{
+  "name": "@bml/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "test": "echo '(worker: covered by integration suite)'"
+  },
+  "dependencies": { "dotenv": "^16.4.5", "pg": "^8.13.1", "pino": "^9.5.0" },
+  "devDependencies": { "@types/node": "^22.9.0", "@types/pg": "^8.11.10", "tsx": "^4.19.2", "typescript": "^5.6.3" }
+}
