@@ -1,0 +1,40 @@
+# Render Blueprint – DEV API + Postgres for the Netlify-hosted web app. SYNTHETIC DATA ONLY.
+# After the first deploy, set API_BASE_URL on Netlify to this service's https URL.
+databases:
+  - name: bml-people-er-db
+    databaseName: bml_people_er
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: bml-people-er-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build:packages && pnpm --filter @bml/api --filter @bml/worker run build
+    startCommand: bash infra/render/start-api.sh
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PLATFORM_ENV
+        value: dev
+      - key: MOCK_IDP_ENABLED
+        value: "true"
+      - key: API_PORT
+        value: "10000"
+      - key: DEV_JWT_SECRET
+        generateValue: true
+      - key: APP_RUNTIME_PASSWORD
+        generateValue: true
+      # 32-byte base64 key. Generate with: openssl rand -base64 32
+      - key: FIELD_ENCRYPTION_KEY
+        sync: false
+      - key: DATABASE_URL_MIGRATOR
+        fromDatabase: { name: bml-people-er-db, property: connectionString }
+      - key: DB_HOST
+        fromDatabase: { name: bml-people-er-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: bml-people-er-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: bml-people-er-db, property: database }
