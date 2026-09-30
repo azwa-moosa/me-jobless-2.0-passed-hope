@@ -32,7 +32,11 @@ describe('synthetic generator', () => {
   it('has an effective-dated restructure', () => {
     expect(a.org.find((o) => o.code === 'DEP040')!.versions).toHaveLength(2);
   });
-  it('has a persona for every role R1–R16', () => {
-    expect(new Set(a.personas.map((p) => p.roleCode)).size).toBe(16);
+  it('covers every role R1–R16 and PLATFORM_OWNER across personas', () => {
+    expect(new Set(a.personas.flatMap((p) => p.grants.map((g) => g.roleCode))).size).toBe(17);
+  });
+  it('has the ten named primary personas in display order', () => {
+    expect(a.personas.filter((p) => p.group === 'primary').map((p) => p.displayName)).toEqual(
+      ['Azwa Moosa', 'Azwa Moosa Number 2', 'Maiz', 'Shai', 'Rayya', 'Humaam', 'Anj', 'Arif', 'Ish', 'Bishwajit']);
   });
 });

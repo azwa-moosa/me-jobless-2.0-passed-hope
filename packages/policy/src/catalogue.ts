@@ -63,7 +63,8 @@ export type ScopeType = 'BANK' | 'ORG_UNIT' | 'SELF' | 'NONE';
 
 export interface RoleDef {
   code: string;
-  ref: string; // R1..R16 in the access matrix
+  /** R1..R16 in the access matrix. Supplementary roles (e.g. PLATFORM_OWNER) have no R-number. */
+  ref: string;
   name: string;
   defaultScope: ScopeType;
   status: string;
@@ -115,7 +116,26 @@ export const ROLES: RoleDef[] = [
     permissions: [...BASE, 'fwt.claims'] },
   { ref: 'R16', code: 'ACCESS_APPROVER', name: 'Access Approver', defaultScope: 'NONE', status: 'Proposed – DR-06',
     permissions: [...BASE, 'admin.users.read', 'audit.read'], auditModules: ['platform', 'admin', 'auth'], privileged: true },
+  // Supplementary role (no R-number): platform ownership. Grants full ADMINISTRATION visibility
+  // (flags, access, audit incl. verify, configuration) but deliberately NOT ER case or Voice content —
+  // case confidentiality still comes only from ER roles + case team (BP §8.1, §15).
+  { ref: '', code: 'PLATFORM_OWNER', name: 'Platform Owner', defaultScope: 'BANK', status: 'Proposed – DR-06 / DR-44',
+    permissions: [...BASE, 'admin.feature_flags.manage', 'admin.users.read', 'config.lookups.read', 'org.read', 'audit.read', 'audit.verify'],
+    auditModules: '*', privileged: true },
 ];
+
+/** Numeric R-order for display (R1 · R4 · R10 …), supplementary roles last. */
+export function sortRoleCodes(codes: string[]): RoleDef[] {
+  const defs = codes.map((c) => ROLES.find((r) => r.code === c)).filter((r): r is RoleDef => !!r);
+  const n = (r: RoleDef) => (r.ref.startsWith('R') ? Number(r.ref.slice(1)) : 1000);
+  return defs.sort((a, b) => n(a) - n(b) || a.code.localeCompare(b.code));
+}
+
+/** "R1 · R4 · R10" plus "+ PLATFORM_OWNER" for supplementary roles. */
+export function formatRoleIds(codes: string[]): { ids: string; extras: string[] } {
+  const sorted = sortRoleCodes(codes);
+  return { ids: sorted.filter((r) => r.ref).map((r) => r.ref).join(' · '), extras: sorted.filter((r) => !r.ref).map((r) => r.code) };
+}
 
 export const PERMISSION_CODES = new Set(PERMISSIONS.map((p) => p.code));
 

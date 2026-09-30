@@ -34,6 +34,7 @@ function MyWork() {
     <>
       <div className="page-head">
         <div>
+          <div className="eyebrow">Workspace</div>
           <h1>HR Action Centre</h1>
           <p>One work queue for tasks from every module. Restricted details are shown only when you are authorised for the source record.</p>
         </div>

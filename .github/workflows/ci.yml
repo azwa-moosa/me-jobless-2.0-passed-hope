@@ -27,6 +27,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: PII / secret scan
         run: pnpm scan:pii
+      - name: Design-token colour lint
+        run: pnpm lint:colors
       - name: Build (packages → api, worker, web)
         run: pnpm build
       - name: Typecheck
@@ -47,5 +49,7 @@ jobs:
         run: pnpm test:security
       - name: E2E (Playwright)
         run: npx playwright install --with-deps chromium && pnpm test:e2e
+      - name: Theme / UI + accessibility (axe)
+        run: pnpm test:ui
       - if: failure()
         run: tail -n 100 api.log worker.log web.log

@@ -101,19 +101,21 @@ export interface NavItem {
 
 const NAV: Array<NavItem & { anyOf: string[] }> = [
   { key: 'home', label: 'Home', href: '/', group: 'main', available: true, anyOf: ['me.read'] },
-  { key: 'my-work', label: 'My Work', href: '/my-work', group: 'main', available: true, anyOf: ['actions.use'] },
-  { key: 'er', label: 'ER Case Management', href: '/er', group: 'modules', available: true, anyOf: ['er.dashboard.read'] },
-  { key: 'employees', label: 'Employee Lookup', href: '/employees', group: 'modules', available: true, anyOf: ['employee.search'] },
-  { key: 'analytics', label: 'People Analytics', href: '/analytics', group: 'modules', available: false, phase: 'Phase 2', anyOf: ['analytics.dashboard.read', 'analytics.admin'] },
-  { key: 'engagement', label: 'Engagement', href: '/engagement', group: 'modules', available: false, phase: 'Phase 5', anyOf: ['engagement.read', 'engagement.admin', 'fwt.claims'] },
+  { key: 'my-work', label: 'HR Action Centre', href: '/my-work', group: 'main', available: true, anyOf: ['actions.use'] },
+  { key: 'er', label: 'Employee Relations', href: '/er', group: 'modules', available: true, anyOf: ['er.dashboard.read'] },
+  { key: 'analytics', label: 'People Analytics', href: '/analytics', group: 'modules', available: true, phase: 'Preview', anyOf: ['analytics.dashboard.read', 'analytics.admin'] },
+  { key: 'engagement', label: 'Engagement', href: '/engagement', group: 'modules', available: true, phase: 'Preview', anyOf: ['engagement.read', 'engagement.admin', 'fwt.claims'] },
   { key: 'voice', label: 'Employee Voice', href: '/voice', group: 'modules', available: false, phase: 'Phase 7', anyOf: ['voice.submit', 'voice.triage'] },
   { key: 'manager', label: 'People Manager', href: '/manager', group: 'modules', available: false, phase: 'Phase 8', anyOf: ['manager.intake'] },
-  { key: 'documents', label: 'Document Studio', href: '/documents', group: 'modules', available: false, phase: 'Phase 4b / 6', anyOf: ['documents.request', 'documents.approve'] },
+  { key: 'documents', label: 'Documents', href: '/documents', group: 'modules', available: false, phase: 'Phase 4b', anyOf: ['documents.request', 'documents.approve'] },
+  { key: 'employees', label: 'Employees', href: '/employees', group: 'modules', available: true, anyOf: ['employee.search'] },
   { key: 'reports', label: 'Reports', href: '/reports', group: 'modules', available: false, phase: 'Phase 4', anyOf: ['reports.read'] },
-  { key: 'audit', label: 'Audit Log', href: '/admin/audit', group: 'admin', available: true, anyOf: ['audit.read'] },
+  { key: 'access', label: 'Access Management', href: '/admin/access', group: 'admin', available: true, anyOf: ['admin.users.read'] },
+  { key: 'audit', label: 'Audit', href: '/admin/audit', group: 'admin', available: true, anyOf: ['audit.read'] },
   { key: 'org', label: 'Organisation', href: '/admin/org', group: 'admin', available: true, anyOf: ['org.read'] },
   { key: 'config', label: 'Configuration', href: '/admin/config', group: 'admin', available: true, anyOf: ['config.lookups.read'] },
   { key: 'flags', label: 'Feature Flags', href: '/admin/flags', group: 'admin', available: true, anyOf: ['admin.feature_flags.manage'] },
+  { key: 'design', label: 'Design System', href: '/admin/design-system', group: 'admin', available: true, anyOf: ['config.lookups.read'] },
 ];
 
 export function navigationFor(ctx: SecurityContext): NavItem[] {

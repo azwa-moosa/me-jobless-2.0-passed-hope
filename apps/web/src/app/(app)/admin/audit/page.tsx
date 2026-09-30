@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import { useSession } from '@/components/AppShell';
 import { Icon } from '@/components/Icon';
-import { Async, Callout, Empty, toast } from '@/components/ui';
+import { Async, Callout, toast } from '@/components/ui';
+import { DataTable } from '@/components/DataTable';
 import { api, fmtDateTime, useApi } from '@/lib/api';
 
-const SENS: Record<string, string> = { HREST: 'chip-bad', REST: 'chip-warn', CONF: 'chip-navy', INT: 'chip-muted' };
+const SENS: Record<string, string> = { HREST: 'chip-violet', REST: 'chip-warn', CONF: 'chip-navy', INT: 'chip-muted' };
 
 export default function AuditLog() {
   const { can } = useSession();
@@ -20,7 +21,8 @@ export default function AuditLog() {
     <>
       <div className="page-head">
         <div>
-          <h1>Audit log</h1>
+          <div className="eyebrow">Administration</div>
+          <h1>Audit</h1>
           <p>Append-only and hash-chained. The application role cannot update or delete events; any tampering breaks the chain and is detected by verification.</p>
         </div>
         {can('audit.verify') && <button className="btn btn-primary" onClick={runVerify}><Icon name="audit" size={16} /> Verify chain</button>}
@@ -37,24 +39,19 @@ export default function AuditLog() {
                     <option value="">All modules</option>{['auth', 'platform', 'er', 'actions', 'employee', 'admin', 'audit'].map((m) => <option key={m}>{m}</option>)}
                   </select>) : null}
               </div>
-              <div className="card-body flush">
-                {d.items.length === 0 ? <Empty title="No events in your scope" /> : (
-                  <div className="table-wrap"><table className="table">
-                    <thead><tr><th>#</th><th>When</th><th>Actor</th><th>Event</th><th>Resource</th><th>Outcome</th><th>Class</th><th>Hash</th></tr></thead>
-                    <tbody>{d.items.map((e: any) => (
-                      <tr key={e.chain_seq}>
-                        <td className="mono small">{e.chain_seq}</td>
-                        <td className="nowrap small">{fmtDateTime(e.occurred_at)}</td>
-                        <td>{e.actor ?? <span className="muted">{e.actor_type}</span>}</td>
-                        <td><span className="mono small strong">{e.event_type}</span>{e.summary && <div className="cell-sub mono" style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={JSON.stringify(e.summary)}>{JSON.stringify(e.summary)}</div>}</td>
-                        <td className="small">{e.resource_type}<div className="cell-sub mono">{e.resource_id?.slice(0, 18)}</div></td>
-                        <td><span className={`chip ${e.outcome === 'SUCCESS' ? 'chip-ok' : 'chip-bad'}`}>{e.outcome}</span></td>
-                        <td><span className={`chip plain ${SENS[e.sensitivity]}`}>{e.sensitivity}</span></td>
-                        <td className="hash" title={e.row_hash}>{e.row_hash.slice(0, 10)}…</td>
-                      </tr>))}</tbody>
-                  </table></div>
-                )}
-              </div>
+              <DataTable caption="Audit events" rows={d.items} rowKey={(e: any) => String(e.chain_seq)} pageSize={25}
+                searchText={(e: any) => `${e.event_type} ${e.actor ?? ''} ${e.resource_type} ${e.resource_id ?? ''} ${e.outcome}`}
+                searchPlaceholder="Search event, actor, resource…" defaultSort={{ key: 'seq', dir: 'desc' }} emptyTitle="No events in your scope"
+                columns={[
+                  { key: 'seq', header: '#', align: 'right', sort: (e: any) => e.chain_seq, render: (e: any) => <span className="mono small">{e.chain_seq}</span> },
+                  { key: 'when', header: 'When', sort: (e: any) => e.occurred_at, render: (e: any) => <span className="nowrap small">{fmtDateTime(e.occurred_at)}</span> },
+                  { key: 'actor', header: 'Actor', sort: (e: any) => e.actor ?? '', render: (e: any) => e.actor ?? <span className="muted">{e.actor_type}</span> },
+                  { key: 'event', header: 'Event', sort: (e: any) => e.event_type, render: (e: any) => <><span className="mono small strong">{e.event_type}</span>{e.summary && <div className="cell-sub mono" style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={JSON.stringify(e.summary)}>{JSON.stringify(e.summary)}</div>}</> },
+                  { key: 'res', header: 'Resource', render: (e: any) => <span className="small">{e.resource_type}<div className="cell-sub mono">{e.resource_id?.slice(0, 18)}</div></span> },
+                  { key: 'outcome', header: 'Outcome', sort: (e: any) => e.outcome, render: (e: any) => <span className={`chip ${e.outcome === 'SUCCESS' ? 'chip-ok' : 'chip-bad'}`}>{e.outcome}</span> },
+                  { key: 'class', header: 'Class', sort: (e: any) => e.sensitivity, render: (e: any) => <span className={`chip plain ${SENS[e.sensitivity]}`}>{e.sensitivity}</span> },
+                  { key: 'hash', header: 'Hash', render: (e: any) => <span className="hash" title={e.row_hash}>{e.row_hash.slice(0, 10)}…</span> },
+                ]} />
             </>
           )}
         </Async>

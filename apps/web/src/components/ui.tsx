@@ -7,7 +7,7 @@ import { Icon } from './Icon';
 // ------------------------------------------------------------------ states (PLT-005)
 export function Loading({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="card-body stack" aria-busy="true" aria-label="Loading">
+    <div className="card-body stack" role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }, (_, i) => <div key={i} className="skeleton" style={{ width: `${90 - i * 12}%` }} />)}
     </div>
   );
@@ -116,4 +116,71 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: Array<
       ))}
     </div>
   );
+}
+
+// ------------------------------------------------------------------ tooltip, dropdown, file upload, masked field
+export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const id = `tt-${label.replace(/\W+/g, '-').toLowerCase()}`;
+  return (
+    <span className="tooltip-wrap" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}
+      aria-describedby={open ? id : undefined}>
+      {children}
+      {open && <span role="tooltip" id={id} className="tooltip">{label}</span>}
+    </span>
+  );
+}
+
+/** kind='menu' for action lists (children are role=menuitem); kind='dialog' for settings popovers (mixed controls). */
+export function Dropdown({ trigger, label, children, align = 'right', kind = 'menu' }: { trigger: ReactNode; label: string; children: (close: () => void) => ReactNode; align?: 'left' | 'right'; kind?: 'menu' | 'dialog' }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    const onClick = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.dropdown')) setOpen(false); };
+    window.addEventListener('keydown', onKey); window.addEventListener('mousedown', onClick);
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('mousedown', onClick); };
+  }, [open]);
+  return (
+    <div className="dropdown">
+      <button type="button" className="dropdown-trigger" aria-haspopup={kind} aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)}>{trigger}</button>
+      {open && <div className="dropdown-menu" role={kind} aria-label={label} style={align === 'left' ? { left: 0, right: 'auto' } : undefined}>{children(() => setOpen(false))}</div>}
+    </div>
+  );
+}
+
+export function FileUpload({ label, accept, hint, onFiles }: { label: string; accept?: string; hint?: string; onFiles?: (f: File[]) => void }) {
+  const [files, setFiles] = useState<File[]>([]);
+  const [drag, setDrag] = useState(false);
+  const take = (list: FileList | null) => { const f = Array.from(list ?? []); setFiles(f); onFiles?.(f); };
+  return (
+    <div>
+      <label className={`dropzone ${drag ? 'dragging' : ''}`} onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); take(e.dataTransfer.files); }}>
+        <Icon name="upload" size={22} />
+        <strong>{label}</strong>
+        <span className="small">Drag a file here or <u>browse</u>{hint ? ` · ${hint}` : ''}</span>
+        <input type="file" accept={accept} onChange={(e) => take(e.target.files)} />
+      </label>
+      {files.length > 0 && <ul className="file-list">{files.map((f) => <li key={f.name}><Icon name="file" size={14} />{f.name}<span className="muted small" style={{ marginLeft: 'auto' }}>{Math.ceil(f.size / 1024)} KB</span></li>)}</ul>}
+    </div>
+  );
+}
+
+/** Restricted field: MASKED by default → REVEAL (if permitted, audited) → REVEALED. */
+export function MaskedField({ value, canReveal, onReveal, label }: { value?: string; canReveal: boolean; onReveal: () => void; label: string }) {
+  if (value) return <span className="masked"><span className="revealed">{value}</span><span className="reveal-note">REVEALED · audited</span></span>;
+  return (
+    <span className="masked">
+      <span className="mask-badge" aria-label={`${label} masked`}>MASKED</span>
+      <span className="dots" aria-hidden="true">••••••</span>
+      {canReveal
+        ? <button className="btn btn-sm btn-outline" onClick={onReveal} aria-label={`Reveal ${label}`}><Icon name="eye" size={14} /> Reveal</button>
+        : <span className="lock"><Icon name="lock" /> Not permitted</span>}
+    </span>
+  );
+}
+
+export function SensitivityBanner({ children }: { children: ReactNode }) {
+  return <div className="sensitivity-banner" role="note"><Icon name="lock" size={16} /><div>{children}</div></div>;
 }

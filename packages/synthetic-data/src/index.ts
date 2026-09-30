@@ -34,9 +34,12 @@ export interface Employee {
   grade: string; positionTitle: string; orgCode: string; managerUid: string | null; nid: string; passport: string | null; salary: number;
 }
 export interface Position { uid: string; title: string; grade: string; orgCode: string; from: string; to: string | null; changeType: string }
+export interface PersonaGrant { roleCode: string; scopeType: 'BANK' | 'ORG_UNIT' | 'SELF' | 'NONE'; orgCode?: string; validTo?: string }
 export interface Persona {
-  upn: string; displayName: string; roleCode: string; scopeType: 'BANK' | 'ORG_UNIT' | 'SELF' | 'NONE';
-  orgCode?: string; employeeUid?: string; validTo?: string; note: string;
+  upn: string; displayName: string; title: string; scopeLabel: string;
+  /** 'primary' = the named DEV personas shown first on sign-in; 'fixture' = single-role accounts used by automated suites. */
+  group: 'primary' | 'fixture';
+  grants: PersonaGrant[]; employeeUid?: string; note: string;
 }
 export interface SyntheticDataset {
   marker: string; seed: number;
@@ -176,24 +179,47 @@ export function generate(opts: GeneratorOptions = {}): SyntheticDataset {
   const empIn = (code: string) => employees.find((e) => e.orgCode === code && e.status === 'ACTIVE')!.uid;
 
   const personas: Persona[] = [
-    { upn: 'analytics.admin@dev.synthetic.local', displayName: 'Nashwa Latheef', roleCode: 'HR_ANALYTICS_ADMIN', scopeType: 'BANK', note: 'R1 · HR Analytics Admin' },
-    { upn: 'er.officer@dev.synthetic.local', displayName: 'Raifa Shareef', roleCode: 'ER_OFFICER', scopeType: 'BANK', note: 'R2 · ER Officer (on case team)' },
-    { upn: 'er.officer2@dev.synthetic.local', displayName: 'Imran Hameed', roleCode: 'ER_OFFICER', scopeType: 'BANK', note: 'R2 · ER Officer (not on case team – negative tests)' },
-    { upn: 'er.manager@dev.synthetic.local', displayName: 'Khadheeja Waheed', roleCode: 'ER_MANAGER', scopeType: 'BANK', note: 'R3 · ER Manager (portfolio)' },
-    { upn: 'engagement.hr@dev.synthetic.local', displayName: 'Zeena Naseem', roleCode: 'ENGAGEMENT_HR', scopeType: 'BANK', note: 'R4 · Engagement HR' },
-    { upn: 'hr.leadership@dev.synthetic.local', displayName: 'Ibrahim Zahir', roleCode: 'HR_LEADERSHIP', scopeType: 'BANK', note: 'R5 · HR Leadership' },
-    { upn: 'division.head@dev.synthetic.local', displayName: 'Hussain Faisal', roleCode: 'DIVISION_HEAD', scopeType: 'ORG_UNIT', orgCode: 'DIV01', note: 'R6 · Division Head (DIV01)' },
-    { upn: 'division.head.expired@dev.synthetic.local', displayName: 'Ali Riyaz', roleCode: 'DIVISION_HEAD', scopeType: 'ORG_UNIT', orgCode: 'DIV02', validTo: '2026-01-01', note: 'R6 · Division Head – EXPIRED grant (edge)' },
-    { upn: 'department.head@dev.synthetic.local', displayName: 'Mariyam Saeed', roleCode: 'DEPARTMENT_HEAD', scopeType: 'ORG_UNIT', orgCode: deptOfDiv1, note: `R7 · Department Head (${deptOfDiv1})` },
-    { upn: 'manager@dev.synthetic.local', displayName: 'Yoosuf Adam', roleCode: 'MANAGER', scopeType: 'SELF', employeeUid: empIn('DEP005'), note: 'R8 · Manager' },
-    { upn: 'employee@dev.synthetic.local', displayName: 'Hawwa Nazeer', roleCode: 'EMPLOYEE', scopeType: 'SELF', employeeUid: empIn('DEP006'), note: 'R9 · Employee' },
-    { upn: 'document.hr@dev.synthetic.local', displayName: 'Shifa Rauf', roleCode: 'DOCUMENT_HR', scopeType: 'BANK', note: 'R10 · Document HR (may reveal restricted fields)' },
-    { upn: 'document.approver@dev.synthetic.local', displayName: 'Hassan Jaleel', roleCode: 'DOCUMENT_APPROVER', scopeType: 'BANK', note: 'R11 · Document Approver' },
-    { upn: 'platform.admin@dev.synthetic.local', displayName: 'Shaan Manik', roleCode: 'PLATFORM_ADMIN', scopeType: 'NONE', note: 'R12 · Platform Admin (no business data)' },
-    { upn: 'voice.triage@dev.synthetic.local', displayName: 'Aminath Thaufeeq', roleCode: 'VOICE_TRIAGE', scopeType: 'NONE', note: 'R13 · Voice Triage (proposed)' },
-    { upn: 'audit.reviewer@dev.synthetic.local', displayName: 'Moosa Areef', roleCode: 'AUDIT_REVIEWER', scopeType: 'NONE', note: 'R14 · Audit Reviewer (proposed)' },
-    { upn: 'fwt.coordinator@dev.synthetic.local', displayName: 'Fathimath Nasih', roleCode: 'FWT_COORDINATOR', scopeType: 'ORG_UNIT', orgCode: 'DIV03', note: 'R15 · FwT Coordinator (proposed)' },
-    { upn: 'access.approver@dev.synthetic.local', displayName: 'Ziyad Shakir', roleCode: 'ACCESS_APPROVER', scopeType: 'NONE', note: 'R16 · Access Approver (proposed)' },
+    // ---- Named DEV personas (display order). Role IDs are rendered numerically from the grants.
+    { upn: 'azwa.moosa@dev.synthetic.local', displayName: 'Azwa Moosa', title: 'Platform Owner / Super Admin', scopeLabel: 'ALL', group: 'primary',
+      grants: ['HR_ANALYTICS_ADMIN', 'ENGAGEMENT_HR', 'DOCUMENT_HR', 'DOCUMENT_APPROVER', 'VOICE_TRIAGE', 'AUDIT_REVIEWER', 'FWT_COORDINATOR', 'ACCESS_APPROVER', 'PLATFORM_OWNER']
+        .map((roleCode) => ({ roleCode, scopeType: 'BANK' as const })), note: 'Owns platform configuration, access and audit. No ER case access (not an ER role).' },
+    { upn: 'azwa.moosa.2@dev.synthetic.local', displayName: 'Azwa Moosa Number 2', title: 'HR Analyst – second test account (no Platform Owner rights)', scopeLabel: 'ER · ENGAGEMENT · ANALYTICS', group: 'primary',
+      grants: ['HR_ANALYTICS_ADMIN', 'ER_OFFICER', 'ENGAGEMENT_HR'].map((roleCode) => ({ roleCode, scopeType: 'BANK' as const })), note: 'Day-to-day analyst view; on ER case teams only when added.' },
+    { upn: 'maiz@dev.synthetic.local', displayName: 'Maiz', title: 'Director, People & Culture', scopeLabel: 'P&C · ALL MODULES (OVERSIGHT)', group: 'primary',
+      grants: ['ER_MANAGER', 'HR_LEADERSHIP', 'DOCUMENT_APPROVER', 'ACCESS_APPROVER'].map((roleCode) => ({ roleCode, scopeType: 'BANK' as const })), note: 'Leadership oversight, ER portfolio, approvals.' },
+    { upn: 'shai@dev.synthetic.local', displayName: 'Shai', title: 'Head of Total Rewards & Employee Relations', scopeLabel: 'ER · REWARDS · DOCUMENTS', group: 'primary',
+      grants: ['ER_MANAGER', 'HR_LEADERSHIP', 'DOCUMENT_HR', 'DOCUMENT_APPROVER'].map((roleCode) => ({ roleCode, scopeType: 'BANK' as const })), note: 'ER portfolio and restricted-field reveal for letters.' },
+    { upn: 'rayya@dev.synthetic.local', displayName: 'Rayya', title: 'Manager – Employee Relations, Engagement & Analytics', scopeLabel: 'ER · ENGAGEMENT · ANALYTICS', group: 'primary',
+      grants: ['HR_ANALYTICS_ADMIN', 'ER_MANAGER', 'ENGAGEMENT_HR', 'MANAGER', 'DOCUMENT_APPROVER', 'FWT_COORDINATOR'].map((roleCode) => ({ roleCode, scopeType: 'BANK' as const })), note: 'Runs ER, engagement and analytics teams.' },
+    { upn: 'humaam@dev.synthetic.local', displayName: 'Humaam', title: 'Employee Relations Officer', scopeLabel: 'ER · VOICE', group: 'primary',
+      grants: [{ roleCode: 'ER_OFFICER', scopeType: 'BANK' }, { roleCode: 'VOICE_TRIAGE', scopeType: 'NONE' }], note: 'Sees ER cases only where on the case team.' },
+    { upn: 'anj@dev.synthetic.local', displayName: 'Anj', title: 'Document HR Officer', scopeLabel: 'DOCUMENTS · EMPLOYEE DATA', group: 'primary',
+      grants: [{ roleCode: 'DOCUMENT_HR', scopeType: 'BANK' }], note: 'Letters; may reveal salary / NID / passport (audited).' },
+    { upn: 'arif@dev.synthetic.local', displayName: 'Arif', title: 'Division Head – Retail Operations', scopeLabel: 'DIVISION · DIV01', group: 'primary',
+      grants: [{ roleCode: 'DIVISION_HEAD', scopeType: 'ORG_UNIT', orgCode: 'DIV01' }, { roleCode: 'MANAGER', scopeType: 'SELF' }], note: 'Own division only; manager intake.' },
+    { upn: 'ish@dev.synthetic.local', displayName: 'Ish', title: 'Employee', scopeLabel: 'SELF', group: 'primary',
+      grants: [{ roleCode: 'EMPLOYEE', scopeType: 'SELF' }], employeeUid: empIn('DEP007'), note: 'Own work and Voice only.' },
+    { upn: 'bishwajit@dev.synthetic.local', displayName: 'Bishwajit', title: 'Platform Administrator (IT)', scopeLabel: 'PLATFORM (TECHNICAL ONLY)', group: 'primary',
+      grants: [{ roleCode: 'PLATFORM_ADMIN', scopeType: 'NONE' }], note: 'Technical administration; no business data.' },
+    // ---- Single-role fixtures used by the automated security and e2e suites
+    { upn: 'analytics.admin@dev.synthetic.local', displayName: 'Nashwa Latheef', title: 'HR Analytics Admin', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'HR_ANALYTICS_ADMIN', scopeType: 'BANK' }], note: 'R1 · HR Analytics Admin' },
+    { upn: 'er.officer@dev.synthetic.local', displayName: 'Raifa Shareef', title: 'ER Officer (on case team)', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'ER_OFFICER', scopeType: 'BANK' }], note: 'R2 · ER Officer (on case team)' },
+    { upn: 'er.officer2@dev.synthetic.local', displayName: 'Imran Hameed', title: 'ER Officer (not on case team – negative tests)', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'ER_OFFICER', scopeType: 'BANK' }], note: 'R2 · ER Officer (not on case team – negative tests)' },
+    { upn: 'er.manager@dev.synthetic.local', displayName: 'Khadheeja Waheed', title: 'ER Manager (portfolio)', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'ER_MANAGER', scopeType: 'BANK' }], note: 'R3 · ER Manager (portfolio)' },
+    { upn: 'engagement.hr@dev.synthetic.local', displayName: 'Zeena Naseem', title: 'Engagement HR', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'ENGAGEMENT_HR', scopeType: 'BANK' }], note: 'R4 · Engagement HR' },
+    { upn: 'hr.leadership@dev.synthetic.local', displayName: 'Ibrahim Zahir', title: 'HR Leadership', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'HR_LEADERSHIP', scopeType: 'BANK' }], note: 'R5 · HR Leadership' },
+    { upn: 'division.head@dev.synthetic.local', displayName: 'Hussain Faisal', title: 'Division Head (DIV01)', scopeLabel: 'ORG_UNIT', group: 'fixture', grants: [{ roleCode: 'DIVISION_HEAD', scopeType: 'ORG_UNIT', orgCode: 'DIV01' }], note: 'R6 · Division Head (DIV01)' },
+    { upn: 'division.head.expired@dev.synthetic.local', displayName: 'Ali Riyaz', title: 'Division Head – EXPIRED grant (edge)', scopeLabel: 'ORG_UNIT', group: 'fixture', grants: [{ roleCode: 'DIVISION_HEAD', scopeType: 'ORG_UNIT', orgCode: 'DIV02', validTo: '2026-01-01' }], note: 'R6 · Division Head – EXPIRED grant (edge)' },
+    { upn: 'department.head@dev.synthetic.local', displayName: 'Mariyam Saeed', title: `Department Head (${deptOfDiv1})`, scopeLabel: 'ORG_UNIT', group: 'fixture', grants: [{ roleCode: 'DEPARTMENT_HEAD', scopeType: 'ORG_UNIT', orgCode: deptOfDiv1 }], note: `R7 · Department Head (${deptOfDiv1})` },
+    { upn: 'manager@dev.synthetic.local', displayName: 'Yoosuf Adam', title: 'Manager', scopeLabel: 'SELF', group: 'fixture', grants: [{ roleCode: 'MANAGER', scopeType: 'SELF' }], employeeUid: empIn('DEP005'), note: 'R8 · Manager' },
+    { upn: 'employee@dev.synthetic.local', displayName: 'Hawwa Nazeer', title: 'Employee', scopeLabel: 'SELF', group: 'fixture', grants: [{ roleCode: 'EMPLOYEE', scopeType: 'SELF' }], employeeUid: empIn('DEP006'), note: 'R9 · Employee' },
+    { upn: 'document.hr@dev.synthetic.local', displayName: 'Shifa Rauf', title: 'Document HR (may reveal restricted fields)', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'DOCUMENT_HR', scopeType: 'BANK' }], note: 'R10 · Document HR (may reveal restricted fields)' },
+    { upn: 'document.approver@dev.synthetic.local', displayName: 'Hassan Jaleel', title: 'Document Approver', scopeLabel: 'BANK', group: 'fixture', grants: [{ roleCode: 'DOCUMENT_APPROVER', scopeType: 'BANK' }], note: 'R11 · Document Approver' },
+    { upn: 'platform.admin@dev.synthetic.local', displayName: 'Shaan Manik', title: 'Platform Admin (no business data)', scopeLabel: 'NONE', group: 'fixture', grants: [{ roleCode: 'PLATFORM_ADMIN', scopeType: 'NONE' }], note: 'R12 · Platform Admin (no business data)' },
+    { upn: 'voice.triage@dev.synthetic.local', displayName: 'Aminath Thaufeeq', title: 'Voice Triage (proposed)', scopeLabel: 'NONE', group: 'fixture', grants: [{ roleCode: 'VOICE_TRIAGE', scopeType: 'NONE' }], note: 'R13 · Voice Triage (proposed)' },
+    { upn: 'audit.reviewer@dev.synthetic.local', displayName: 'Moosa Areef', title: 'Audit Reviewer (proposed)', scopeLabel: 'NONE', group: 'fixture', grants: [{ roleCode: 'AUDIT_REVIEWER', scopeType: 'NONE' }], note: 'R14 · Audit Reviewer (proposed)' },
+    { upn: 'fwt.coordinator@dev.synthetic.local', displayName: 'Fathimath Nasih', title: 'FwT Coordinator (proposed)', scopeLabel: 'ORG_UNIT', group: 'fixture', grants: [{ roleCode: 'FWT_COORDINATOR', scopeType: 'ORG_UNIT', orgCode: 'DIV03' }], note: 'R15 · FwT Coordinator (proposed)' },
+    { upn: 'access.approver@dev.synthetic.local', displayName: 'Ziyad Shakir', title: 'Access Approver (proposed)', scopeLabel: 'NONE', group: 'fixture', grants: [{ roleCode: 'ACCESS_APPROVER', scopeType: 'NONE' }], note: 'R16 · Access Approver (proposed)' },
   ];
 
   return { marker: SYNTHETIC_MARKER, seed, levels, org, employees, positions, personas };

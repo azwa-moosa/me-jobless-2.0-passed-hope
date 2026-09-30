@@ -1,7 +1,7 @@
 # BML People & ER Platform
 
 Internal HR platform built from the *Master Product & Technical Blueprint* (Sept 2026).
-This repository is **v0.1 – Sprint 1 foundation + first vertical slice** (HR Action Centre "My Work" and ER Case Management intake).
+This repository is **v0.2** – Sprint 1 foundation, first vertical slice (HR Action Centre, ER Case Management intake) and the **BML design system with light/dark themes** (`docs/design-system.md`).
 
 > **DEV uses synthetic data only.** No real employee data may be loaded outside an approved UAT/PROD environment. CI fails on NID-like values.
 
@@ -9,7 +9,7 @@ This repository is **v0.1 – Sprint 1 foundation + first vertical slice** (HR A
 
 | Layer | Choice |
 |---|---|
-| Web | Next.js 15 (App Router) + React 19, **plain CSS design system** (`apps/web/src/styles/globals.css`) |
+| Web | Next.js 15 (App Router) + React 19, **plain CSS design system** – tokens in `apps/web/src/styles/tokens.css`, light/dark/system themes |
 | API | NestJS 10 (TypeScript), modular monolith |
 | Worker | Node (TypeScript) – transactional-outbox → audit relay |
 | Database | PostgreSQL 16 (+ pgvector image), plain SQL migrations, Row-Level Security on ER |
@@ -43,23 +43,25 @@ Useful commands:
 | `pnpm test` | Unit tests (policy, crypto, synthetic data, log redaction) |
 | `pnpm test:security` | 135 permission-matrix, record/field, workflow, audit-tamper and env-safety checks (needs api + worker running) |
 | `pnpm test:e2e` | Playwright browser tests (needs web running) |
+| `pnpm test:ui` | 14 theme/UI checks incl. axe accessibility, both themes, 4 screen sizes |
+| `pnpm lint:colors` | Fails if any component uses a colour literal instead of a token |
 | `pnpm scan:pii` | Fails on real-looking NIDs or secrets |
 | `pnpm test:all` | All of the above |
 | `pnpm build` | Build packages, API, worker and web |
 
 ## Try these journeys
 
-| Persona | Try |
-|---|---|
-| **Raifa Shareef** – ER Officer | Home → overdue ER task → *Open source record* → case chronology; *New case*; amend a chronology entry |
-| **Imran Hameed** – ER Officer (not on team) | Paste a case URL from Raifa's session → permission denied (API 403, audited, RLS returns no row) |
-| **Khadheeja Waheed** – ER Manager | Sees all cases; add a case team member; close a case (blocked by open mandatory task → override with reason); Access log tab |
-| **Yoosuf Adam** – Manager | My Work shows "ER follow-up task" with **restricted detail** – no case reference, no link |
-| **Shifa Rauf** – Document HR | Employee lookup → Reveal salary/NID (audited) |
-| **Hussain Faisal** – Division Head | Employee lookup only returns DIV01 staff |
-| **Ali Riyaz** – expired grant | Signs in to "No active access" |
-| **Shaan Manik** – Platform Admin | Org tree as-of dates, config, feature flags; try enabling `voice.anonymous_route` (blocked – DR-27); no employee/ER data |
-| **Moosa Areef** – Audit Reviewer | Audit log → *Verify chain* |
+| Persona | Roles | Try |
+|---|---|---|
+| **Azwa Moosa** – Platform Owner / Super Admin | R1 · R4 · R10 · R11 · R13 · R14 · R15 · R16 + PLATFORM_OWNER | Access Management, Audit → Verify chain, Feature Flags, Design System; note ER is not visible (no ER role) |
+| **Rayya** – Manager, ER, Engagement & Analytics | R1 · R3 · R4 · R8 · R11 · R15 | ER dashboard and cases, People Analytics and Engagement previews |
+| **Shai** – Head of Total Rewards & ER | R3 · R5 · R10 · R11 | Employees → Reveal salary (audited) |
+| **Humaam** – ER Officer | R2 · R13 | Sees only ER-…-0001 (on its case team) |
+| **Arif** – Division Head | R6 · R8 | Employees returns DIV01 staff only |
+| **Ish** – Employee | R9 | Home, HR Action Centre, Voice only |
+| **Bishwajit** – Platform Administrator | R12 | Technical admin only; no employee or ER data |
+
+Single-role fixtures (R1–R16, expired grant, non-team ER officer) are under *Single-role test fixtures* on the sign-in page and drive the automated suites. Switch theme from the user menu (top right) → Appearance.
 
 ## Repository layout
 

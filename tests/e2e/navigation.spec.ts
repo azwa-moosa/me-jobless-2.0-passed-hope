@@ -2,7 +2,9 @@ import { expect, Page, test } from '@playwright/test';
 
 async function signIn(page: Page, name: string) {
   await page.goto('/sign-in');
-  await page.getByRole('button', { name: new RegExp(name) }).click();
+  const card = page.getByRole('button', { name: new RegExp(`^Sign in as ${name},`) });
+  if (!(await card.isVisible())) await page.locator('.fixtures summary').click(); // single-role fixtures are collapsed
+  await card.click();
   await page.waitForURL('/');
   await expect(page.locator('.user-meta strong')).toHaveText(name);
 }
@@ -15,7 +17,7 @@ test('unauthenticated users are sent to sign-in', async ({ page }) => {
 
 test('Employee sees only Home, My Work and Voice', async ({ page }) => {
   await signIn(page, 'Hawwa Nazeer');
-  expect(await navLabels(page)).toEqual(['Home', 'My Work', 'Employee Voice']);
+  expect(await navLabels(page)).toEqual(['Home', 'HR Action Centre', 'Employee Voice']);
 });
 
 test('Employee direct URL to ER shows permission denied (API 403)', async ({ page }) => {
@@ -30,8 +32,8 @@ test('Platform Admin has admin navigation but no business modules', async ({ pag
   await signIn(page, 'Shaan Manik');
   const nav = await navLabels(page);
   expect(nav).toContain('Feature Flags');
-  expect(nav).not.toContain('ER Case Management');
-  expect(nav).not.toContain('Employee Lookup');
+  expect(nav).not.toContain('Employee Relations');
+  expect(nav).not.toContain('Employees');
 });
 
 test('expired grant signs in to a clear no-access state', async ({ page }) => {
@@ -62,6 +64,22 @@ test('ER Officer creates a case end-to-end', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/ER-\d{4}-\d{4}/);
   await page.getByRole('tab', { name: 'Chronology' }).click();
   await expect(page.locator('.tl-type').first()).toHaveText(/created/i);
+});
+
+test('Named personas sign in with numerically ordered role IDs', async ({ page }) => {
+  await signIn(page, 'Rayya');
+  await expect(page.locator('.user-meta .role-ids')).toHaveText('R1 · R3 · R4 · R8 · R11 · R15');
+  expect(await navLabels(page)).toEqual(expect.arrayContaining(['Employee Relations', 'People Analytics', 'Engagement', 'HR Action Centre']));
+});
+
+test('Platform Owner sees administration but not ER case content', async ({ page }) => {
+  await signIn(page, 'Azwa Moosa');
+  const nav = await navLabels(page);
+  expect(nav).toEqual(expect.arrayContaining(['Access Management', 'Audit', 'Feature Flags', 'Design System']));
+  expect(nav).not.toContain('Employee Relations');
+  const res = page.waitForResponse((r) => r.url().includes('/api/er/dashboard'));
+  await page.goto('/er');
+  expect((await res).status()).toBe(403);
 });
 
 test('Document HR reveal is explicit and audited', async ({ page }) => {

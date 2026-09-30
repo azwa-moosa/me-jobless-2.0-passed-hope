@@ -7,3 +7,6 @@ dist
 coverage
 .turbo
 test-results
+
+test-results
+playwright-report

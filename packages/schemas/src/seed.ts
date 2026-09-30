@@ -104,11 +104,16 @@ async function main() {
     userId.set(p.upn, rows[0].id);
   }
   const sysUser = (await q(`insert into platform.app_user(upn, display_name, is_synthetic, status) values ('system@dev.synthetic.local','System',true,'DISABLED') returning id`)).rows[0].id;
+  let sort = 0;
   for (const p of ds.personas) {
-    await q(`insert into platform.user_scope(user_id, role_id, scope_type, org_unit_id, valid_from, valid_to, grant_reason, created_by, approved_by)
-             values ($1,$2,$3,$4,'2025-01-01',$5,$6,$7,$7)`,
-      [userId.get(p.upn), roleId.get(p.roleCode), p.scopeType, p.orgCode ? orgId.get(p.orgCode) : null, p.validTo ?? null,
-       `DEV persona – ${p.note}`, sysUser]);
+    for (const g of p.grants) {
+      await q(`insert into platform.user_scope(user_id, role_id, scope_type, org_unit_id, valid_from, valid_to, grant_reason, created_by, approved_by)
+               values ($1,$2,$3,$4,'2025-01-01',$5,$6,$7,$7)`,
+        [userId.get(p.upn), roleId.get(g.roleCode), g.scopeType, g.orgCode ? orgId.get(g.orgCode) : null, g.validTo ?? null,
+         `DEV persona – ${p.title}`, sysUser]);
+    }
+    await q(`insert into platform.dev_persona(user_id, title, scope_label, persona_group, sort_order, note) values ($1,$2,$3,$4,$5,$6)`,
+      [userId.get(p.upn), p.title, p.scopeLabel, p.group, sort++, p.note]);
   }
   const U = (k: string) => userId.get(`${k}@dev.synthetic.local`)!;
 
@@ -228,7 +233,7 @@ async function main() {
 
   const c1 = await createCase({ by: 'er.officer', status: 'ASSESSMENT', type: 'DISCIPLINARY', category: 'ATTENDANCE', source: 'MANAGER', priority: 'MEDIUM', conf: 'STANDARD',
     summary: 'SAMPLE – repeated unapproved absence reported by line manager (synthetic scenario).', openedDaysAgo: 18,
-    team: [['er.officer', 'LEAD'], ['er.manager', 'REVIEWER']], subjectUid: subject(10) });
+    team: [['er.officer', 'LEAD'], ['er.manager', 'REVIEWER'], ['humaam', 'OFFICER']], subjectUid: subject(10) });
   await c1.ev('NOTE', 16, 'SAMPLE – initial review of attendance extract completed.');
   await c1.ev('STATUS_CHANGED', 15, 'Status INTAKE → ASSESSMENT');
   await action({ module: 'er', type: 'er_case', recordId: c1.id, title: 'ER follow-up task', detail: `${c1.reference}: obtain attendance records from manager`, owner: 'er.officer',
@@ -267,6 +272,21 @@ async function main() {
     ['fwt.coordinator', 'Gather quarter activity plan (SAMPLE)', 'LOW', 8, 'OPEN'],
     ['access.approver', 'Review pending access recertification (SAMPLE)', 'MEDIUM', 0.5, 'OPEN'],
     ['er.officer', 'Update D&G tracker reference mapping (DR-19)', 'MEDIUM', -8, 'COMPLETED', 1],
+    ['azwa.moosa', 'Circulate access matrix review sheet (DR-06/DR-07)', 'HIGH', 2, 'IN_PROGRESS'],
+    ['azwa.moosa', 'Confirm Entra DEV app registration request with IT', 'MEDIUM', -1, 'OPEN'],
+    ['azwa.moosa', 'Review BML design tokens with Brand team', 'LOW', 9, 'OPEN'],
+    ['azwa.moosa.2', 'Prepare monthly absence extract (SAMPLE)', 'MEDIUM', 4, 'OPEN'],
+    ['maiz', 'Name module owners (DR-01)', 'URGENT', -3, 'OPEN'],
+    ['maiz', 'Approve Sprint 2 scope', 'HIGH', 5, 'OPEN'],
+    ['shai', 'Confirm ER SLA matrix (DR-16)', 'HIGH', 3, 'OPEN'],
+    ['shai', 'Nominate letter signatories (DR-30)', 'MEDIUM', -2, 'BLOCKED'],
+    ['rayya', 'Agree ER workflow statuses (DR-15)', 'HIGH', 1, 'IN_PROGRESS'],
+    ['rayya', 'Set engagement anonymity threshold (DR-22)', 'MEDIUM', 6, 'OPEN'],
+    ['humaam', 'Update case chronology for ER-2026-0001 (SAMPLE)', 'MEDIUM', 2, 'OPEN'],
+    ['anj', 'Collect approved letter templates (DR-30)', 'HIGH', 3, 'OPEN'],
+    ['arif', 'Review division access list (SAMPLE)', 'MEDIUM', 5, 'OPEN'],
+    ['ish', 'Acknowledge policy update (SAMPLE)', 'LOW', 10, 'OPEN'],
+    ['bishwajit', 'Provision UAT environment request (DR-03)', 'MEDIUM', 7, 'OPEN'],
   ];
   for (const [owner, title, pr, due, st, done] of general) {
     await action({ module: 'platform', type: 'phase0_task', recordId: sysUser, title, owner, priority: pr, status: st, dueDays: due, by: 'hr.leadership', completedDaysAgo: done });

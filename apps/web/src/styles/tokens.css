@@ -1,0 +1,224 @@
+/* =============================================================================
+   BML design tokens — single source of truth for the platform's visual identity.
+
+   No official BML token file exists in this repository, so these are a
+   BML-INSPIRED set (deep navy, BML blue, cyan/teal, BML red, white, cool grey).
+   To adopt official brand values, change ONLY the "Brand primitives" block;
+   every component reads the semantic tokens below it.
+
+   Layers
+     1. Brand primitives        (raw brand hues — never used directly by components)
+     2. Scale tokens            (type, spacing, radius, shadow, motion)
+     3. Semantic tokens — light (background, surface, foreground, border, status…)
+     4. Semantic tokens — dark  (selected steps, not an inversion)
+   Theme resolution: <html data-theme="light|dark"> set before first paint by
+   the inline script in app/layout.tsx. "System" follows prefers-color-scheme.
+   ============================================================================= */
+
+/* ---------- 1. Brand primitives ---------------------------------------------- */
+:root {
+  --bml-navy-950: #06101f;
+  --bml-navy-900: #0a1628;
+  --bml-navy-850: #0d1b31;
+  --bml-navy-800: #111f36;
+  --bml-navy-700: #16273f;
+  --bml-navy-600: #1f3864;
+  --bml-navy: var(--bml-navy-600);
+
+  --bml-blue-700: #094a8c;
+  --bml-blue-600: #0b5cad;
+  --bml-blue-500: #1e6bc4;
+  --bml-blue-400: #4a86e0;
+  --bml-blue-300: #7db4f5;
+  --bml-blue: var(--bml-blue-600);
+
+  --bml-cyan-700: #006d77;
+  --bml-cyan-600: #008f9c;
+  --bml-cyan-400: #2cc3cf;
+  --bml-cyan-300: #7fd4db;
+  --bml-cyan: var(--bml-cyan-600);
+
+  --bml-red-700: #9e0c24;
+  --bml-red-600: #c8102e;
+  --bml-red-500: #e5474f;
+  --bml-red-300: #f58b92;
+  --bml-red: var(--bml-red-600);
+
+  --bml-slate-50: #f4f6f9;
+  --bml-slate-100: #eef2f7;
+  --bml-slate-200: #e2e7ee;
+  --bml-slate-300: #cbd3de;
+  --bml-slate-400: #98a2b3;
+  --bml-slate-500: #5b6778;
+  --bml-slate-700: #344054;
+  --bml-slate-900: #0f1b2d;
+  --bml-white: #ffffff;
+}
+
+/* ---------- 2. Scale tokens (theme-independent) ------------------------------ */
+:root {
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --fs-2xs: 11px; --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-2xl: 26px; --fs-3xl: 30px;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+  --lh-tight: 1.25; --lh-normal: 1.5;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-10: 40px;
+
+  /* Enterprise, not consumer: restrained radii */
+  --radius-xs: 3px; --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-pill: 999px;
+
+  --sidebar-w: 256px;
+  --topbar-h: 60px;
+  --control-h: 36px;
+  --control-h-sm: 30px;
+  --motion-fast: .12s;
+  --z-sticky: 20; --z-drawer: 40; --z-modal: 50; --z-toast: 60; --z-tooltip: 70;
+}
+
+/* ---------- 3. Semantic tokens — LIGHT --------------------------------------- */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --background: var(--bml-slate-50);
+  --surface: var(--bml-white);
+  --surface-secondary: #f8fafc;
+  --surface-sunken: var(--bml-slate-100);
+  --surface-hover: #f0f5fc;
+  --surface-overlay: rgba(10, 22, 40, .45);
+
+  --foreground: var(--bml-slate-900);
+  --foreground-secondary: var(--bml-slate-700);
+  --foreground-muted: var(--bml-slate-500);
+  --foreground-subtle: var(--bml-slate-400);
+  --foreground-inverse: var(--bml-white);
+
+  --border: var(--bml-slate-200);
+  --border-strong: var(--bml-slate-300);
+  --input: #c3ccd8;
+  --input-bg: var(--bml-white);
+
+  --primary: var(--bml-blue-600);
+  --primary-hover: var(--bml-blue-700);
+  --primary-foreground: var(--bml-white);
+  --primary-soft: #e8f0fa;
+  --primary-soft-foreground: #0b4a8c;
+  --link: var(--bml-blue-600);
+
+  --accent: var(--bml-cyan-700);
+  --accent-soft: #e3f4f5;
+
+  /* Brand red — identity accents (brand mark, active navigation, eyebrows).
+     Deliberately distinct in role from --danger, which is reserved for status. */
+  --brand-red: var(--bml-red-600);
+  --brand-red-hover: var(--bml-red-700);
+  --brand-red-soft: #fdecee;
+  --brand-red-foreground: #9e0c24;
+
+  --success: #067647;  --success-soft: #ecfdf3; --success-border: #abefc6;
+  --warning: #b54708;  --warning-soft: #fffaeb; --warning-border: #fedf89;
+  --danger: #b42318;   --danger-soft: #fef3f2;  --danger-border: #fecdca; --danger-hover: #912018;
+  --info: #175cd3;     --info-soft: #eff8ff;    --info-border: #b2ddff;
+  --special: #5b3fb0;  --special-soft: #f4f3ff; --special-border: #d9d6fe;
+  --neutral: var(--bml-slate-700); --neutral-soft: var(--surface-secondary); --neutral-border: var(--border);
+
+  /* Confidential / restricted content marker — calm, not alarming */
+  --sensitive: #5b3fb0;
+  --sensitive-soft: #f6f4fe;
+  --sensitive-border: #ddd6fe;
+
+  --sidebar-bg: linear-gradient(180deg, var(--bml-navy-600) 0%, var(--bml-navy-900) 100%);
+  --sidebar-fg: #c9d3e6;
+  --sidebar-fg-strong: var(--bml-white);
+  --sidebar-muted: #8fa0bf;
+  --sidebar-hover: rgba(255, 255, 255, .07);
+  --sidebar-active: rgba(255, 255, 255, .12);
+  --sidebar-border: rgba(255, 255, 255, .08);
+  --sidebar-indicator: var(--bml-red-500);
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, .06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, .08);
+  --shadow-lg: 0 16px 36px rgba(16, 24, 40, .18);
+  --focus-ring: 0 0 0 3px rgba(11, 92, 173, .35);
+  --skeleton-a: #eef1f5; --skeleton-b: #f7f8fa;
+
+  /* Charts — categorical order validated (dataviz validator, surface #fff):
+     blue · red · teal · violet · amber. Fixed order, never cycled. */
+  --chart-1: #0b5cad; --chart-2: #c8102e; --chart-3: #008f9c; --chart-4: #6a4bc4; --chart-5: #b7791f;
+  --chart-grid: var(--bml-slate-200);
+  --chart-axis: var(--bml-slate-300);
+  --chart-label: var(--bml-slate-500);
+  --chart-track: var(--bml-slate-100);
+}
+
+/* ---------- 4. Semantic tokens — DARK (first-class, selected steps) ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: var(--bml-navy-900);
+  --surface: var(--bml-navy-800);
+  --surface-secondary: var(--bml-navy-700);
+  --surface-sunken: var(--bml-navy-850);
+  --surface-hover: #1a2d4a;
+  --surface-overlay: rgba(2, 6, 14, .66);
+
+  --foreground: #e7ecf3;
+  --foreground-secondary: #c3ccd8;
+  --foreground-muted: #9aa8bb;
+  --foreground-subtle: #6f7f96;
+  --foreground-inverse: var(--bml-navy-900);
+
+  --border: #22344f;
+  --border-strong: #2e4466;
+  --input: #3a5275;
+  --input-bg: var(--bml-navy-850);
+
+  --primary: var(--bml-blue-500);
+  --primary-hover: #2a7ad6;
+  --primary-foreground: var(--bml-white);
+  --primary-soft: rgba(74, 134, 224, .16);
+  --primary-soft-foreground: #a9cbf7;
+  --link: var(--bml-blue-300);
+
+  --accent: var(--bml-cyan-400);
+  --accent-soft: rgba(44, 195, 207, .14);
+
+  --brand-red: var(--bml-red-500);
+  --brand-red-hover: var(--bml-red-300);
+  --brand-red-soft: rgba(229, 71, 79, .16);
+  --brand-red-foreground: #f8a5ab;
+
+  --success: #5bd592;  --success-soft: rgba(91, 213, 146, .13);  --success-border: rgba(91, 213, 146, .35);
+  --warning: #f5b454;  --warning-soft: rgba(245, 180, 84, .13);  --warning-border: rgba(245, 180, 84, .35);
+  --danger: #ff8a80;   --danger-soft: rgba(249, 112, 102, .14);  --danger-border: rgba(249, 112, 102, .4); --danger-hover: #d93b2f;
+  --info: #84bdff;     --info-soft: rgba(132, 189, 255, .13);   --info-border: rgba(132, 189, 255, .35);
+  --special: #b8a6ff;  --special-soft: rgba(184, 166, 255, .13); --special-border: rgba(184, 166, 255, .35);
+  --neutral: #c3ccd8;  --neutral-soft: var(--surface-secondary); --neutral-border: var(--border-strong);
+
+  --sensitive: #c4b5fd;
+  --sensitive-soft: rgba(196, 181, 253, .09);
+  --sensitive-border: rgba(196, 181, 253, .28);
+
+  --sidebar-bg: linear-gradient(180deg, #0b1830 0%, var(--bml-navy-950) 100%);
+  --sidebar-fg: #b9c5da;
+  --sidebar-fg-strong: #f2f5fa;
+  --sidebar-muted: #7d8ea9;
+  --sidebar-hover: rgba(255, 255, 255, .06);
+  --sidebar-active: rgba(74, 134, 224, .18);
+  --sidebar-border: rgba(255, 255, 255, .07);
+  --sidebar-indicator: var(--bml-red-500);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, .55);
+  --focus-ring: 0 0 0 3px rgba(125, 180, 245, .45);
+  --skeleton-a: #172a45; --skeleton-b: #1e3453;
+
+  /* Validated against dark surface #111f36: blue · red · teal · violet · amber */
+  --chart-1: #4a86e0; --chart-2: #e5474f; --chart-3: #11998a; --chart-4: #8d72e2; --chart-5: #b37a12;
+  --chart-grid: #22344f;
+  --chart-axis: #2e4466;
+  --chart-label: #9aa8bb;
+  --chart-track: #1a2d4a;
+}

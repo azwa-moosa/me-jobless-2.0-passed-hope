@@ -4,7 +4,7 @@ import { use, useState } from 'react';
 import { ActionDrawer } from '@/components/ActionDrawer';
 import { Icon } from '@/components/Icon';
 import { UserPicker } from '@/components/UserPicker';
-import { Async, Callout, ConfChip, Empty, Modal, PriorityChip, SampleTag, StatusChip, Tabs, toast } from '@/components/ui';
+import { Async, Callout, ConfChip, Empty, Modal, PriorityChip, SampleTag, SensitivityBanner, StatusChip, Tabs, toast } from '@/components/ui';
 import { api, ApiError, fmtDate, fmtDateTime, labelise, relDue, useApi } from '@/lib/api';
 
 type Tab = 'overview' | 'timeline' | 'tasks' | 'team' | 'access';
@@ -20,12 +20,13 @@ export default function CasePage({ params }: { params: Promise<{ id: string }> }
         <>
           <div className="page-head">
             <div>
-              <div className="crumbs"><Link href="/er">ER Case Management</Link> / {c.reference}</div>
+              <div className="crumbs"><Link href="/er">Employee Relations</Link> / {c.reference}</div>
               <div className="row"><h1>{c.reference}</h1><StatusChip code={c.status} label={c.statusLabel} /><PriorityChip code={c.priority} /><ConfChip code={c.confidentiality} /></div>
               <p>{labelise(c.type)} · {labelise(c.category)} · Source: {labelise(c.source)} · Opened {fmtDate(c.openedAt)} · Lead {c.lead}</p>
             </div>
             <CaseActions c={c} onChanged={kase.reload} />
           </div>
+          <SensitivityBanner><strong>Confidential ER record · {c.confidentiality === 'RESTRICTED' ? 'Restricted' : 'Highly restricted'}.</strong> Visible to the case team only. Your access to this case has been logged.</SensitivityBanner>
           <Tabs<Tab> value={tab} onChange={setTab} tabs={[
             { key: 'overview', label: 'Overview' }, { key: 'timeline', label: 'Chronology' }, { key: 'tasks', label: 'Tasks' },
             { key: 'team', label: 'Case team', count: c.team.filter((t: any) => t.active).length },
@@ -145,7 +146,7 @@ function Timeline({ id, canUpdate }: { id: string; canUpdate: boolean }) {
     } catch (e) { setErr((e as ApiError).problem.detail ?? 'Failed'); }
   }
 
-  const dotClass = (t: string) => t === 'AMENDMENT' ? 'amend' : t === 'CLOSED' ? 'closed' : ['CREATED', 'STATUS_CHANGED', 'TEAM_CHANGED', 'TASK_CREATED'].includes(t) ? 'system' : '';
+  const dotClass = (t: string) => t === 'AMENDMENT' ? 'amend' : t === 'CLOSED' ? 'closed' : t === 'CREATED' ? 'created' : ['STATUS_CHANGED', 'TEAM_CHANGED', 'TASK_CREATED'].includes(t) ? 'system' : '';
   return (
     <div className="card">
       <div className="card-head">

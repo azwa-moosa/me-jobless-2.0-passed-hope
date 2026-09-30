@@ -3,8 +3,27 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, ApiError, initials } from '@/lib/api';
 import { ErrorState, Loading } from '@/components/ui';
+import { RoleIds } from '@/components/AppShell';
+import { ThemeSwitch } from '@/components/ThemeSwitch';
 
-interface Persona { upn: string; displayName: string; roleCode: string; roleName: string; ref: string; scope: string; expired: boolean; note: string }
+interface Persona { upn: string; displayName: string; title: string; scope: string; group: 'primary' | 'fixture'; note: string; roleIds: string; extras: string[]; expired: boolean }
+
+function PersonaCard({ p, busy, onPick }: { p: Persona; busy: string | null; onPick: (upn: string) => void }) {
+  return (
+    <button className={`persona ${p.extras.length ? 'owner' : ''} ${p.expired ? 'expired' : ''}`} onClick={() => onPick(p.upn)} disabled={!!busy}
+      aria-label={`Sign in as ${p.displayName}, ${p.title}`}>
+      <div className="avatar" aria-hidden="true">{initials(p.displayName)}</div>
+      <div>
+        <strong>{p.displayName}</strong>
+        <div className="title">{p.title}</div>
+        <RoleIds ids={p.roleIds} extras={p.extras} />
+        <div className="scope">SCOPE: {p.scope}</div>
+        {p.expired && <span className="chip chip-bad plain mt-1">Expired grant</span>}
+        {busy === p.upn && <div className="note">Signing in…</div>}
+      </div>
+    </button>
+  );
+}
 
 function SignIn() {
   const [personas, setPersonas] = useState<Persona[] | null>(null);
@@ -24,16 +43,18 @@ function SignIn() {
     } catch (e) { setError(e as ApiError); setBusy(null); }
   }
 
-  const sorted = (personas ?? []).slice().sort((a, b) => Number(a.ref?.slice(1)) - Number(b.ref?.slice(1)) || a.upn.localeCompare(b.upn))
-    .filter((p) => !filter || `${p.displayName} ${p.roleName} ${p.note}`.toLowerCase().includes(filter.toLowerCase()));
+  const match = (p: Persona) => !filter || `${p.displayName} ${p.title} ${p.roleIds} ${p.scope}`.toLowerCase().includes(filter.toLowerCase());
+  const primary = (personas ?? []).filter((p) => p.group === 'primary' && match(p));
+  const fixtures = (personas ?? []).filter((p) => p.group === 'fixture' && match(p));
 
   return (
     <div className="signin">
       <section className="signin-hero">
         <div className="brand" style={{ padding: 0, border: 0 }}>
-          <div className="brand-mark">P&amp;ER</div>
-          <div className="brand-text"><strong>People &amp; ER Platform</strong><span>People &amp; Culture</span></div>
+          <div className="brand-mark" aria-hidden="true">P&amp;ER</div>
+          <div className="brand-text"><strong>People &amp; ER Platform</strong><span>BML · People &amp; Culture</span></div>
         </div>
+        <div className="accent-rule" aria-hidden="true" />
         <h1>One governed platform for People Analytics, ER and HR workflows.</h1>
         <p>This is the <strong>DEV</strong> environment. It contains synthetic data only and uses a mock identity provider so each role can be tested.</p>
         <ul>
@@ -44,31 +65,28 @@ function SignIn() {
         </ul>
         <p className="small" style={{ marginTop: 'auto' }}>In UAT and PROD this page is replaced by Microsoft Entra ID single sign-on with MFA. The mock sign-in cannot run outside DEV.</p>
       </section>
-      <section className="signin-main">
+      <main className="signin-main">
         <div className="row-between">
           <div>
-            <h2>Choose a DEV persona</h2>
-            <p className="muted mt-1">One persona per draft role (R1–R16) plus edge cases. Roles are pending sign-off (DR-06).</p>
+            <div className="eyebrow">DEV sign-in</div>
+            <h2>Choose a persona</h2>
+            <p className="muted mt-1">Role IDs follow the draft access matrix (R1–R16). Roles are pending sign-off (DR-06).</p>
           </div>
-          <input className="input" style={{ maxWidth: 260 }} placeholder="Filter personas…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter personas" />
+          <div className="row">
+            <ThemeSwitch id="signin-theme" />
+            <input className="input" style={{ maxWidth: 220 }} type="search" placeholder="Filter personas…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter personas" />
+          </div>
         </div>
         {error && <div className="card mt-3"><ErrorState error={error} /></div>}
         {!personas && !error && <div className="card mt-3"><Loading rows={5} /></div>}
-        <div className="persona-grid">
-          {sorted.map((p) => (
-            <button key={p.upn} className={`persona ${p.expired ? 'expired' : ''}`} onClick={() => signIn(p.upn)} disabled={!!busy}>
-              <div className="avatar">{initials(p.displayName)}</div>
-              <div>
-                <strong>{p.displayName}</strong>
-                <div className="role">{p.ref} · {p.roleName}</div>
-                {p.note.includes('(') && <div className="note">{p.note.slice(p.note.indexOf('(') + 1, p.note.lastIndexOf(')'))}</div>}
-                <div className="note">Scope: {p.scope}{p.expired && <span className="chip chip-bad plain" style={{ marginLeft: 6 }}>Expired grant</span>}</div>
-                {busy === p.upn && <div className="note">Signing in…</div>}
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+        <div className="persona-grid">{primary.map((p) => <PersonaCard key={p.upn} p={p} busy={busy} onPick={signIn} />)}</div>
+        {fixtures.length > 0 && (
+          <details className="fixtures">
+            <summary>Single-role test fixtures ({fixtures.length}) – used by the automated security and e2e suites</summary>
+            <div className="persona-grid">{fixtures.map((p) => <PersonaCard key={p.upn} p={p} busy={busy} onPick={signIn} />)}</div>
+          </details>
+        )}
+      </main>
     </div>
   );
 }

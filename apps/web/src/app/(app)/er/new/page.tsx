@@ -43,7 +43,7 @@ export default function NewCase() {
     <>
       <div className="page-head">
         <div>
-          <div className="crumbs"><Link href="/er">ER Case Management</Link> / New case</div>
+          <div className="crumbs"><Link href="/er">Employee Relations</Link> / New case</div>
           <h1>New ER case</h1>
           <p>Structured intake. You will be added as case lead; the case is visible only to its case team and ER Managers.</p>
         </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ROLES, PERMISSIONS, SecurityContext, can, canInOrg, canSeeCase, maskRestricted, navigationFor,
-  auditModulesFor, checkTransition, availableTransitions, addBusinessDays, formatSequence, StateMachineDef,
+  auditModulesFor, checkTransition, formatRoleIds, availableTransitions, addBusinessDays, formatSequence, StateMachineDef,
 } from './index';
 
 function ctxFor(roleCodes: string[], scope: Partial<SecurityContext['scope']> = {}): SecurityContext {
@@ -15,9 +15,20 @@ function ctxFor(roleCodes: string[], scope: Partial<SecurityContext['scope']> = 
 }
 
 describe('catalogue', () => {
-  it('defines 16 roles R1–R16 with unique codes', () => {
-    expect(ROLES).toHaveLength(16);
-    expect(new Set(ROLES.map((r) => r.code)).size).toBe(16);
+  it('defines 16 numbered roles R1–R16 plus supplementary roles, all unique', () => {
+    expect(ROLES.filter((r) => /^R\d+$/.test(r.ref))).toHaveLength(16);
+    expect(new Set(ROLES.map((r) => r.code)).size).toBe(ROLES.length);
+  });
+  it('formats role IDs in numeric order with supplementary roles appended', () => {
+    const f = formatRoleIds(['ACCESS_APPROVER', 'DOCUMENT_APPROVER', 'DOCUMENT_HR', 'ENGAGEMENT_HR', 'FWT_COORDINATOR', 'HR_ANALYTICS_ADMIN', 'VOICE_TRIAGE', 'AUDIT_REVIEWER', 'PLATFORM_OWNER']);
+    expect(f.ids).toBe('R1 · R4 · R10 · R11 · R13 · R14 · R15 · R16');
+    expect(f.extras).toEqual(['PLATFORM_OWNER']);
+  });
+  it('Platform Owner cannot read ER cases or reveal restricted fields', () => {
+    const o = ctxFor(['PLATFORM_OWNER']);
+    expect(can(o, 'er.case.read')).toBe(false);
+    expect(can(o, 'employee.salary.reveal')).toBe(false);
+    expect(can(o, 'audit.verify')).toBe(true);
   });
   it('permission codes are unique', () => {
     expect(new Set(PERMISSIONS.map((p) => p.code)).size).toBe(PERMISSIONS.length);
@@ -82,6 +93,7 @@ describe('field masking', () => {
 describe('navigation', () => {
   it('Employee sees Home, My Work, Voice only', () => {
     expect(navigationFor(ctxFor(['EMPLOYEE'])).map((n) => n.key)).toEqual(['home', 'my-work', 'voice']);
+    expect(navigationFor(ctxFor(['EMPLOYEE'])).map((n) => n.label)).toEqual(['Home', 'HR Action Centre', 'Employee Voice']);
   });
   it('Audit Reviewer sees Home + Audit Log', () => {
     expect(navigationFor(ctxFor(['AUDIT_REVIEWER'])).map((n) => n.key)).toEqual(['home', 'audit']);

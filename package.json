@@ -20,11 +20,14 @@
     "dev": "pnpm build:packages && pnpm --parallel --filter @bml/api --filter @bml/worker --filter @bml/web run dev",
     "test:security": "node tests/security/run-matrix.mjs",
     "scan:pii": "node tests/security/pii-scan.mjs",
-    "test:e2e": "playwright test",
-    "test:all": "pnpm test && pnpm scan:pii && pnpm test:security && pnpm test:e2e",
-    "db:dictionary": "pnpm --filter @bml/schemas run dictionary"
+    "test:e2e": "playwright test tests/e2e",
+    "test:all": "pnpm test && pnpm scan:pii && pnpm lint:colors && pnpm test:security && pnpm test:e2e && pnpm test:ui",
+    "db:dictionary": "pnpm --filter @bml/schemas run dictionary",
+    "lint:colors": "node tests/ui/lint-colors.mjs",
+    "test:ui": "playwright test tests/ui"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.56.1",
     "dotenv": "^16.4.5",
     "pg": "^8.13.1",

@@ -1,8 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { Async, Callout, Empty, ErrorState, toast } from '@/components/ui';
+import { Async, Callout, Empty, ErrorState, MaskedField, toast } from '@/components/ui';
+import { DataTable } from '@/components/DataTable';
 import { api, ApiError, fmtDate, labelise, useApi } from '@/lib/api';
+
+const FIELD_LABEL: Record<string, string> = { salary: 'Salary', nid: 'NID', passport: 'Passport' };
 
 export default function Employees() {
   const [q, setQ] = useState('');
@@ -15,30 +18,28 @@ export default function Employees() {
     <>
       <div className="page-head">
         <div>
-          <h1>Employee lookup</h1>
+          <div className="eyebrow">EmployeeService</div>
+          <h1>Employees</h1>
           <p>Authorised lookup through EmployeeService. Results are limited to your organisational scope; salary, NID and passport are always masked.</p>
         </div>
         <span className="chip chip-warn">Provider: synthetic HRIS (DR-04)</span>
       </div>
       <div className="grid grid-main-side">
         <div className="card">
-          <div className="card-body" style={{ borderBottom: '1px solid var(--line)' }}>
+          <div className="card-body" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="search"><Icon name="search" /><input className="input" placeholder="Search by name, UID (e.g. S10001) or position" value={q} onChange={(e) => setQ(e.target.value)} autoFocus aria-label="Search employees" /></div>
           </div>
           <div className="card-body flush">
             {debounced.length < 2 ? <Empty title="Start typing to search" icon="search">Minimum two characters.</Empty> : (
               <Async state={results} rows={5}>
                 {(r) => r.items.length === 0 ? <Empty title="No matches in your scope" icon="search">People outside your organisational scope are never returned.</Empty> : (
-                  <table className="table"><thead><tr><th>Employee</th><th>Position</th><th>Organisation</th><th>Status</th></tr></thead><tbody>
-                    {r.items.map((e: any) => (
-                      <tr key={e.uid} className="clickable" onClick={() => setSel(e.uid)} style={sel === e.uid ? { background: 'var(--navy-50)' } : undefined}>
-                        <td><div className="cell-main">{e.fullName}</div><div className="cell-sub mono">{e.uid}</div></td>
-                        <td>{e.positionTitle}<div className="cell-sub">{e.grade}</div></td>
-                        <td>{e.orgUnit}</td>
-                        <td><span className={`chip ${e.status === 'ACTIVE' ? 'chip-ok' : 'chip-muted'}`}>{labelise(e.status)}</span></td>
-                      </tr>
-                    ))}
-                  </tbody></table>
+                  <DataTable caption="Employee search results" rows={r.items} rowKey={(e: any) => e.uid} onRowClick={(e: any) => setSel(e.uid)} selectedKey={sel} pageSize={10} sticky={false}
+                    columns={[
+                      { key: 'name', header: 'Employee', sort: (e: any) => e.fullName, render: (e: any) => <><div className="cell-main">{e.fullName}</div><div className="cell-sub mono">{e.uid}</div></> },
+                      { key: 'pos', header: 'Position', sort: (e: any) => e.grade, render: (e: any) => <>{e.positionTitle}<div className="cell-sub">{e.grade}</div></> },
+                      { key: 'org', header: 'Organisation', sort: (e: any) => e.orgUnit, render: (e: any) => e.orgUnit },
+                      { key: 'status', header: 'Status', sort: (e: any) => e.status, render: (e: any) => <span className={`chip ${e.status === 'ACTIVE' ? 'chip-ok' : 'chip-muted'}`}>{labelise(e.status)}</span> },
+                    ]} />
                 )}
               </Async>
             )}
@@ -56,12 +57,10 @@ function Profile({ uid }: { uid: string }) {
   const [revealed, setRevealed] = useState<Record<string, string>>({});
   useEffect(() => setRevealed({}), [uid]);
   async function reveal(field: string) {
-    try { const r = await api(`/employees/${uid}/reveal`, { method: 'POST', body: { field } }); setRevealed((x) => ({ ...x, [field]: r.value })); toast(`${labelise(field)} revealed – this access was audited`); }
+    try { const r = await api(`/employees/${uid}/reveal`, { method: 'POST', body: { field } }); setRevealed((x) => ({ ...x, [field]: r.value })); toast(`${FIELD_LABEL[field]} revealed – this access was audited`); }
     catch (e) { toast((e as ApiError).problem.detail ?? 'Not permitted', true); }
   }
-  const Masked = ({ field, f }: { field: string; f: any }) => revealed[field] ? <span className="revealed">{revealed[field]}</span> : (
-    <span className="masked"><span className="dots">••••••</span>{f?.canReveal ? <button className="btn btn-sm btn-ghost" onClick={() => reveal(field)}><Icon name="eye" size={14} /> Reveal</button> : <span className="lock"><Icon name="lock" /> restricted</span>}</span>
-  );
+  const Masked = ({ field, f }: { field: string; f: any }) => <MaskedField label={FIELD_LABEL[field]} value={revealed[field]} canReveal={!!f?.canReveal} onReveal={() => reveal(field)} />;
   return (
     <div className="stack">
       <div className="card">

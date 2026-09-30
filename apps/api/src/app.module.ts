@@ -21,10 +21,11 @@ import { ActionsService } from './actions/actions.service';
 import { ActionsController } from './actions/actions.controller';
 import { CIPHER, ErService } from './er/er.service';
 import { ErController } from './er/er.controller';
+import { PreviewController } from './config/preview.controller';
 
 @Module({
   imports: [DiscoveryModule],
-  controllers: [AuthController, AuditController, EmployeesController, OrgController, PlatformController, ActionsController, ErController],
+  controllers: [AuthController, AuditController, EmployeesController, OrgController, PlatformController, ActionsController, ErController, PreviewController],
   providers: [
     { provide: ENV, useFactory: () => loadEnv() },
     { provide: CIPHER, inject: [ENV], useFactory: (env: Env) => new FieldCipher(env.FIELD_ENCRYPTION_KEY) },

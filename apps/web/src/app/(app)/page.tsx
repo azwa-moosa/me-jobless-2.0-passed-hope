@@ -17,6 +17,7 @@ export default function Home() {
     <>
       <div className="page-head">
         <div>
+          <div className="eyebrow">People &amp; ER Platform</div>
           <h1>{greet}, {me.displayName.split(' ')[0]}</h1>
           <p>Exception-first view: what is overdue, due soon or blocked across everything you are allowed to see.</p>
         </div>
@@ -64,7 +65,7 @@ function WorkSummary() {
       <Async state={summary} rows={2}>
         {(s) => (
           <div className="grid grid-4 mb-3">
-            <Link href="/my-work?view=my" className="card kpi"><span className="kpi-label">My open actions</span><span className="kpi-value">{s.my}</span><span className="kpi-sub">Assigned to you</span></Link>
+            <Link href="/my-work?view=my" className="card kpi accent-brand"><span className="kpi-label">My open actions</span><span className="kpi-value">{s.my}</span><span className="kpi-sub">Assigned to you</span></Link>
             <Link href="/my-work?view=overdue" className={`card kpi ${s.overdue ? 'accent-bad' : 'accent-ok'}`}><span className="kpi-label">Overdue</span><span className="kpi-value">{s.overdue}</span><span className="kpi-sub">Past due date</span></Link>
             <Link href="/my-work?view=due_soon" className={`card kpi ${s.due_soon ? 'accent-warn' : ''}`}><span className="kpi-label">Due soon</span><span className="kpi-value">{s.due_soon}</span><span className="kpi-sub">Within {3} business days</span></Link>
             <Link href="/my-work?view=blocked" className={`card kpi ${s.blocked ? 'accent-warn' : ''}`}><span className="kpi-label">Blocked</span><span className="kpi-value">{s.blocked}</span><span className="kpi-sub">Waiting on something</span></Link>
@@ -105,7 +106,7 @@ function ErSnapshot() {
           <div className="card-body">
             <div className="row" style={{ gap: 28 }}>
               <div><div className="kpi-label">Open cases</div><div className="kpi-value">{x.open}</div></div>
-              <div><div className="kpi-label">Overdue case actions</div><div className="kpi-value" style={{ color: x.overdueActions ? 'var(--bad-700)' : undefined }}>{x.overdueActions}</div></div>
+              <div><div className="kpi-label">Overdue case actions</div><div className="kpi-value" style={{ color: x.overdueActions ? 'var(--danger)' : undefined }}>{x.overdueActions}</div></div>
               <div className="small muted" style={{ marginLeft: 'auto', maxWidth: 320 }}><Icon name="lock" size={12} /> {x.scope}</div>
             </div>
           </div>
